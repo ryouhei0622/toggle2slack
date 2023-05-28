@@ -6,7 +6,8 @@ import os
 import requests
 
 # Slack hooks
-SLACK_HOOKS_URL = "https://hooks.slack.com/services/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"
+# SLACK_HOOKS_URL = "https://hooks.slack.com/services/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"
+SLACK_HOOKS_URL = "https://hooks.slack.com/services/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"
 TOGGL_API_TOKEN = "7cad27f9b07abbdd83767e87dc77d5ea"
 file_name = "./history.txt"
 
@@ -27,14 +28,20 @@ def get_toggl():
     print("##################################################")
     description = current_json["data"]["description"]
 
-    # この時点でプロジェクト名をとってきておく
+    # プロジェクト名を取得
     pname = None
     if "pid" in current_json["data"]:
         pid = current_json["data"]["pid"]
         pname = get_project_name(pid)
         print(f"pid: {pid}, pname: {pname}, description: {description}")
 
-    return pname, current_json["data"]["tags"], description
+    # tagをここで取得
+    tags = []
+    if "tags" in current_json["data"]:
+        tags = current_json["data"]["tags"]
+        print(f"tags: {tags}")
+    return pname, tags, description
+    # return  description
 
 
 def get_project_name(pid):
@@ -63,15 +70,22 @@ def check_old_toggl(now_task):
 
 
 def write_history(str_history):
-    with open(file_name, mode="w", encoding="utf-8") as fw:
-        fw.write(str_history)
+    with open(file_name, mode="a", encoding="utf-8") as fw:
+        fw.write(str_history + "\n")
 
 
 def write_slack(title, description):
     text = f"""【{title}】 `{description}` """
 
-    payload = {"username": "Toggl", "text": text, "icon_emoji": ":clock10:"}
-
+    # payload = {"username": "Toggl", "text": text, "icon_emoji": ":clock10:"}
+    payload = {
+        "channel": "#takamoto-tl",
+        "username": "ステータス管理",
+        "text": text,
+        "icon_emoji": ":clock10:",
+    }
+    print(payload)
+    print(json.dumps(payload))
     requests.post(SLACK_HOOKS_URL, data=json.dumps(payload))
 
 
@@ -81,7 +95,8 @@ if __name__ == "__main__":
 
     # 現在のタスクの取得
     pname, tags, description = get_toggl()
-    now_task = f'{description} ({pname}：{", ".join(tags)})'
+    now_task = f'{description} ({pname}: {", ".join(tags)})'
+    print(now_task)
     is_same, prev_task = check_old_toggl(now_task)
 
     if not pname and not description:
