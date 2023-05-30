@@ -6,9 +6,8 @@ import os
 import requests
 
 # Slack hooks
-# SLACK_HOOKS_URL = "https://hooks.slack.com/services/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"
-SLACK_HOOKS_URL = "https://hooks.slack.com/services/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"
-TOGGL_API_TOKEN = "7cad27f9b07abbdd83767e87dc77d5ea"
+SLACK_HOOKS_URL = "**"
+TOGGL_API_TOKEN = "**"
 file_name = "./history.txt"
 
 
@@ -23,9 +22,6 @@ def get_toggl():
     current_json = current.json()
     if not current_json["data"]:
         return None, [], None
-    print("##################################################")
-    print(f'{current_json["data"]}')
-    print("##################################################")
     description = current_json["data"]["description"]
 
     # プロジェクト名を取得
@@ -33,13 +29,13 @@ def get_toggl():
     if "pid" in current_json["data"]:
         pid = current_json["data"]["pid"]
         pname = get_project_name(pid)
-        print(f"pid: {pid}, pname: {pname}, description: {description}")
+        # print(f"pid: {pid}, pname: {pname}, description: {description}")
 
     # tagをここで取得
     tags = []
     if "tags" in current_json["data"]:
         tags = current_json["data"]["tags"]
-        print(f"tags: {tags}")
+        # print(f"tags: {tags}")
     return pname, tags, description
     # return  description
 
@@ -77,15 +73,12 @@ def write_history(str_history):
 def write_slack(title, description):
     text = f"""【{title}】 `{description}` """
 
-    # payload = {"username": "Toggl", "text": text, "icon_emoji": ":clock10:"}
     payload = {
         "channel": "#takamoto-tl",
         "username": "ステータス管理",
         "text": text,
         "icon_emoji": ":clock10:",
     }
-    print(payload)
-    print(json.dumps(payload))
     requests.post(SLACK_HOOKS_URL, data=json.dumps(payload))
 
 
